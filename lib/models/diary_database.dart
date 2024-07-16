@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 class DiaryDatabase extends ChangeNotifier {
   static late Isar isar;
 
-  //inisialisasi database
+  // Inisialisasi database
   static Future<void> initialize() async {
     final dir = await getApplicationDocumentsDirectory();
     isar = await Isar.open(
@@ -15,40 +15,41 @@ class DiaryDatabase extends ChangeNotifier {
     );
   }
 
-  //list diary
+  // List diary
   final List<Diary> currentDiary = [];
 
-  //create
-  Future<void> addDiary(String textFromUser) async {
-    //buat objek diary baru
-    final newDiary = Diary()..text = textFromUser;
+  // Create
+  Future<void> addDiary(String textFromUser, DateTime date) async {
+    // Buat objek diary baru
+    final newDiary = Diary(text: textFromUser, date: date);
 
-    //simpan ke db
+    // Simpan ke db
     await isar.writeTxn(() => isar.diarys.put(newDiary));
 
-    //fetch dari db
+    // Fetch dari db
     fetchDiary();
   }
 
-  //read
+  // Read
   Future<void> fetchDiary() async {
-    List<Diary> fethedDiary = await isar.diarys.where().findAll();
+    List<Diary> fetchedDiary = await isar.diarys.where().findAll();
     currentDiary.clear();
-    currentDiary.addAll(fethedDiary);
+    currentDiary.addAll(fetchedDiary);
     notifyListeners();
   }
 
-  //update
-  Future<void> updateDiary(int id, String newText) async {
+  // Update
+  Future<void> updateDiary(int id, String newText, DateTime newDate) async {
     final dataLama = await isar.diarys.get(id);
     if (dataLama != null) {
       dataLama.text = newText;
+      dataLama.date = newDate;
       await isar.writeTxn(() => isar.diarys.put(dataLama));
       await fetchDiary();
     }
   }
 
-  //delete
+  // Delete
   Future<void> deleteDiary(int id) async {
     await isar.writeTxn(() => isar.diarys.delete(id));
     await fetchDiary();

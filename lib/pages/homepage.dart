@@ -2,7 +2,7 @@ import 'package:bukuharian/models/diary.dart';
 import 'package:bukuharian/models/diary_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class Homepage extends StatefulWidget {
@@ -14,6 +14,8 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   final textController = TextEditingController();
+  final selecDate = TextEditingController();
+  final selecDate1 = TextEditingController();
 
   @override
   void initState() {
@@ -29,16 +31,46 @@ class _HomepageState extends State<Homepage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Diary Baru"),
-        content: TextField(
-          controller: textController,
-          minLines: 1,
-          maxLines: 100,
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: textController,
+                minLines: 1,
+                maxLines: 100,
+              ),
+              GestureDetector(
+                onTap: () async {
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2101),
+                  );
+                  if (pickedDate != null) {
+                    setState(() {
+                      selecDate1.text =
+                          DateFormat('dd MMMM yyyy').format(pickedDate);
+                      selecDate.text = pickedDate.toString();
+                    });
+                  }
+                },
+                child: TextField(
+                  enabled: false,
+                  controller: selecDate1,
+                  minLines: 1,
+                  maxLines: 100,
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           MaterialButton(
             onPressed: () {
               //menambahkan ke db
-              context.read<DiaryDatabase>().addDiary(textController.text);
+              context.read<DiaryDatabase>().addDiary(
+                  textController.text, DateTime.parse(selecDate.text));
 
               //membersihkan controller
               textController.clear();
@@ -62,20 +94,48 @@ class _HomepageState extends State<Homepage> {
   void updateDiary(Diary diary) {
     //munculkan text diary yang ada sekarang
     textController.text = diary.text;
+    selecDate1.text = DateFormat('dd MMMM yyyy').format(diary.date);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Perbarui Diary"),
-        content: TextField(controller: textController),
+        content: SingleChildScrollView(
+            child: Column(
+          children: [
+            TextField(controller: textController),
+            GestureDetector(
+              onTap: () async {
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2101),
+                );
+                if (pickedDate != null) {
+                  setState(() {
+                    selecDate1.text =
+                        DateFormat('dd MMMM yyyy').format(pickedDate);
+                    selecDate.text = pickedDate.toString();
+                  });
+                }
+              },
+              child: TextField(
+                enabled: false,
+                controller: selecDate1,
+                minLines: 1,
+                maxLines: 100,
+              ),
+            ),
+          ],
+        )),
         actions: [
           //munculkan tombol update
           MaterialButton(
             onPressed: () {
               //perbarui data di db
-              context
-                  .read<DiaryDatabase>()
-                  .updateDiary(diary.id, textController.text);
+              context.read<DiaryDatabase>().updateDiary(diary.id,
+                  textController.text, DateTime.parse(selecDate.text));
               //clear controller
               textController.clear();
               //pop dialog box
@@ -118,9 +178,6 @@ class _HomepageState extends State<Homepage> {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               "Buku Harian",
-              style: GoogleFonts.josefinSans(
-                fontSize: 30.0,
-              ),
             ),
           ),
 
@@ -156,6 +213,8 @@ class _HomepageState extends State<Homepage> {
                   ),
                   child: ListTile(
                     title: Text(diary.text),
+                    subtitle:
+                        Text(DateFormat('dd MMMM yyyy').format(diary.date)),
                   ),
                 );
               },

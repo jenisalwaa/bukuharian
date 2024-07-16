@@ -17,8 +17,13 @@ const DiarySchema = CollectionSchema(
   name: r'Diary',
   id: -5216934141026337743,
   properties: {
-    r'text': PropertySchema(
+    r'date': PropertySchema(
       id: 0,
+      name: r'date',
+      type: IsarType.dateTime,
+    ),
+    r'text': PropertySchema(
+      id: 1,
       name: r'text',
       type: IsarType.string,
     )
@@ -53,7 +58,8 @@ void _diarySerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.text);
+  writer.writeDateTime(offsets[0], object.date);
+  writer.writeString(offsets[1], object.text);
 }
 
 Diary _diaryDeserialize(
@@ -62,9 +68,11 @@ Diary _diaryDeserialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Diary();
+  final object = Diary(
+    date: reader.readDateTime(offsets[0]),
+    text: reader.readString(offsets[1]),
+  );
   object.id = id;
-  object.text = reader.readString(offsets[0]);
   return object;
 }
 
@@ -76,6 +84,8 @@ P _diaryDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
+      return (reader.readDateTime(offset)) as P;
+    case 1:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -170,6 +180,59 @@ extension DiaryQueryWhere on QueryBuilder<Diary, Diary, QWhereClause> {
 }
 
 extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> dateEqualTo(
+      DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'date',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> dateGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'date',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> dateLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'date',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> dateBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'date',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Diary, Diary, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -356,6 +419,18 @@ extension DiaryQueryObject on QueryBuilder<Diary, Diary, QFilterCondition> {}
 extension DiaryQueryLinks on QueryBuilder<Diary, Diary, QFilterCondition> {}
 
 extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'date', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'date', Sort.desc);
+    });
+  }
+
   QueryBuilder<Diary, Diary, QAfterSortBy> sortByText() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'text', Sort.asc);
@@ -370,6 +445,18 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
 }
 
 extension DiaryQuerySortThenBy on QueryBuilder<Diary, Diary, QSortThenBy> {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'date', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'date', Sort.desc);
+    });
+  }
+
   QueryBuilder<Diary, Diary, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -396,6 +483,12 @@ extension DiaryQuerySortThenBy on QueryBuilder<Diary, Diary, QSortThenBy> {
 }
 
 extension DiaryQueryWhereDistinct on QueryBuilder<Diary, Diary, QDistinct> {
+  QueryBuilder<Diary, Diary, QDistinct> distinctByDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'date');
+    });
+  }
+
   QueryBuilder<Diary, Diary, QDistinct> distinctByText(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -408,6 +501,12 @@ extension DiaryQueryProperty on QueryBuilder<Diary, Diary, QQueryProperty> {
   QueryBuilder<Diary, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Diary, DateTime, QQueryOperations> dateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'date');
     });
   }
 
